@@ -6,7 +6,7 @@ import subprocess
 maxproc=6
 
 import numpy as np
-import pylab as pl
+import matplotlib.pyplot as pl
 
 def plotdata(casename, maxproc=6):
     """
@@ -104,16 +104,16 @@ def plotdata(casename, maxproc=6):
         pl.plot(ran,lineariterations,'-'+mark,label=str(numthreads)+" threads")
 
         pl.figure(5)
-        pl.plot(ran,100*assemblytime[0]/(ran*assemblytime),'-'+mark,label=str(numthreads)+" threads")
-
-        pl.figure(6)
-        pl.plot(ran,100*assemblytime[0]/assemblytime,'-'+mark,label=str(numthreads)+" threads")
-
-        pl.figure(7)
         pl.plot(ran,100*linearsolvetime[0]/(ran*linearsolvetime),'-'+mark,label=str(numthreads)+" threads")
 
-        pl.figure(8)
+        pl.figure(6)
         pl.plot(ran,100*linearsolvetime[0]/linearsolvetime,'-'+mark,label=str(numthreads)+" threads")
+
+        pl.figure(7)
+        pl.plot(ran,100*assemblytime[0]/(ran*assemblytime),'-'+mark,label=str(numthreads)+" threads")
+
+        pl.figure(8)
+        pl.plot(ran,100*assemblytime[0]/assemblytime,'-'+mark,label=str(numthreads)+" threads")
 
     pl.figure(1)
     pl.legend()
@@ -133,19 +133,19 @@ def plotdata(casename, maxproc=6):
 
     pl.figure(5)
     pl.legend()
-    pl.savefig('assemblytime_'+casename)
+    pl.savefig('linearsolvetime_'+casename)
 
     pl.figure(6)
     pl.legend()
-    pl.savefig('speedup_assemblytime_'+casename)
+    pl.savefig('speedup_linearsolvetime_'+casename)
 
     pl.figure(7)
     pl.legend()
-    pl.savefig('linearsolvetime_'+casename)
+    pl.savefig('assemblytime_'+casename)
 
     pl.figure(8)
     pl.legend()
-    pl.savefig('speedup_linearsolvetime_'+casename)
+    pl.savefig('speedup_assemblytime_'+casename)
 
 
 
