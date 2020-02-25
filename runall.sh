@@ -1,5 +1,7 @@
 #!/bin/bash
 
+maxproc=6
+
 for data in "spe9/SPE9.DATA" "norne/NORNE_ATW2013.DATA"
 do
     if [[ "$data" == "spe9/SPE9.DATA" ]]
@@ -9,11 +11,11 @@ do
     then
         casename="norne"
     fi
-    for numprocessors in 1 2 3 4 5 6
+    for numproc in $(seq $maxproc)
     do
         for numthreads in 1 2
         do
-            mpirun -np $numprocessors ~/opm/opm-simulators/build/bin/flow ~/opm/opm-data/$data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numprocessors"_threads"$numthreads
+            mpirun -np $numproc ~/opm/opm-simulators/build/bin/flow ~/opm/opm-data/$data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numproc"_threads"$numthreads
         done
     done
 done
