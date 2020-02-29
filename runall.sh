@@ -130,7 +130,7 @@ do
     do
         for numthreads in $(seq $maxthreads)
         do
-            mpirun -np $numproc $flowdir/flow ~/opm/opm-data/$data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numproc"_threads"$numthreads
+            mpirun -np $numproc $flowdir/flow $data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numproc"_threads"$numthreads
         done
     done
 done
