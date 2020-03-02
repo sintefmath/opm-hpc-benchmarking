@@ -123,6 +123,10 @@ if [[ ! -d $flowdir ]]; then
     exit 1
 fi
 
+if [[ ! -d sims ]]; then
+    mkdir sims
+fi
+
 for data in $cases
 do
     casename="$(basename -s .DATA $data)"
@@ -130,7 +134,7 @@ do
     do
         for numthreads in $(seq $maxthreads)
         do
-            mpirun -np $numproc $flowdir/flow $data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numproc"_threads"$numthreads
+            mpirun -np $numproc $flowdir/flow $data --threads-per-process=$numthreads --output-dir="sims/"$casename"_processors"$numproc"_threads"$numthreads
         done
     done
 done

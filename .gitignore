@@ -130,3 +130,8 @@ dmypy.json
 
 # pictures
 *.png
+#simulations
+sims/
+#
+*.swp
+*~
