@@ -50,18 +50,36 @@ def get_linearSolveTime(casename, numthreads, maxproc):
     return res
 
 def get_numCells(casename, numthreads, maxproc):
-    res=np.zeros((maxproc,maxproc))
+    owned=np.zeros((maxproc,maxproc))
+    overlap=np.zeros((maxproc,maxproc))
+    total=np.zeros((maxproc,maxproc))
     for numprocessors in np.arange(2,maxproc+1):
         dn="sims/"+casename+"_processors"+str(numprocessors)+"_threads"+str(numthreads)
         if numprocessors == 2:
             command = 'grep -i load '+dn+'/*DBG|cut -d " " -f 4'
             totalactivecells = int(parse(command))
-            res[0,0] = totalactivecells
-        command='line=`grep -i load '+dn+'/*DBG -n`; linenumber=`echo $line|cut -d ":" -f 1`; numprocs=`echo $line|cut -d " " -f 8`; linenumber=`expr $linenumber + 3`; data=`tail -n+$linenumber '+dn+'/*DBG | head -n$numprocs`; count=0;for d in $data; do if [ `expr $count % 2` -eq 1 ]; then echo $d", "; fi; count=`expr $count + 1`; done'
+            total[0,0] = totalactivecells
+        command='line=`grep -i load '+dn+'/*DBG -n`; linenumber=`echo $line|cut -d ":" -f 1`; linenumber=`expr $linenumber + 3`; echo $linenumber'
+        linenumber = str(parse(command)).strip()
+        #owned
+        rest=str(1)
+        command='data=`tail -n+'+linenumber+' '+dn+'/*DBG | head -n'+str(numprocessors)+'`; count=0;for d in $data; do if [ `expr $count % 4` -eq '+rest+' ]; then echo $d", "; fi; count=`expr $count + 1`; done'
         data = str(parse(command))
         for i in np.arange(0,numprocessors):
-            res[numprocessors-1,i] = int(data.split(', ')[i])
-    return res
+            owned[numprocessors-1,i] = int(data.split(', ')[i])
+        #overlap
+        rest=str(2)
+        command='data=`tail -n+'+linenumber+' '+dn+'/*DBG | head -n'+str(numprocessors)+'`; count=0;for d in $data; do if [ `expr $count % 4` -eq '+rest+' ]; then echo $d", "; fi; count=`expr $count + 1`; done'
+        data = str(parse(command))
+        for i in np.arange(0,numprocessors):
+            overlap[numprocessors-1,i] = int(data.split(', ')[i])
+        #total
+        rest=str(3)
+        command='data=`tail -n+'+linenumber+' '+dn+'/*DBG | head -n'+str(numprocessors)+'`; count=0;for d in $data; do if [ `expr $count % 4` -eq '+rest+' ]; then echo $d", "; fi; count=`expr $count + 1`; done'
+        data = str(parse(command))
+        for i in np.arange(0,numprocessors):
+            total[numprocessors-1,i] = int(data.split(', ')[i])
+    return owned, overlap, total
 
 def writedata(foldername, casename, numthreads, maxproc):
     name=foldername+"/"+casename
@@ -76,8 +94,10 @@ def writedata(foldername, casename, numthreads, maxproc):
     np.save(name+"_assemblytime",res)
     res=get_linearSolveTime(casename, numthreads, maxproc)
     np.save(name+"_linearsolvetime",res)
-    res=get_numCells(casename, numthreads, maxproc)
-    np.save(name+"_numCells",res)
+    owned, overlap, total=get_numCells(casename, numthreads, maxproc)
+    np.save(name+"_numOwnedCells",owned)
+    np.save(name+"_numOverlapCells",overlap)
+    np.save(name+"_numTotalCells",total)
 
 
 if __name__ == "__main__":

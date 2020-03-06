@@ -35,7 +35,17 @@ def getLinearSolveTime(foldername, casename, numthreads, maxproc):
     res=np.load(name+"_linearsolvetime.npy")
     return res
 
-def getNumCells(foldername, casename, numthreads, maxproc):
+def getNumOwnedCells(foldername, casename, numthreads, maxproc):
     name=getName(foldername, casename, numthreads, maxproc)
-    res=np.load(name+"_numCells.npy")
+    res=np.load(name+"_numOwnedCells.npy")
+    return res
+
+def getNumOverlapCells(foldername, casename, numthreads, maxproc):
+    name=getName(foldername, casename, numthreads, maxproc)
+    res=np.load(name+"_numOverlapCells.npy")
+    return res
+
+def getNumTotalCells(foldername, casename, numthreads, maxproc):
+    name=getName(foldername, casename, numthreads, maxproc)
+    res=np.load(name+"_numTotalCells.npy")
     return res
