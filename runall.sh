@@ -4,6 +4,11 @@
 # 1) parse arguments
 ###########################
 
+issaga=False
+if [[ "`uname --nodename|cut -d "." -f2,3`" == "saga.sigma2" ]]; then
+    issaga=True
+fi
+
 maxproc=""
 flowdir=""
 cases=""
@@ -126,15 +131,61 @@ fi
 if [[ ! -d sims ]]; then
     mkdir sims
 fi
+cd sims/
 
 for data in $cases
 do
     casename="$(basename -s .DATA $data)"
+    casefullfoldername="$(dirname $data)"
+    casefoldername="$(basename $(dirname $data))"
     for numproc in $(seq $maxproc)
     do
         for numthreads in $(seq $maxthreads)
         do
-            mpirun -np $numproc $flowdir/flow $data --threads-per-process=$numthreads --output-dir="sims/"$casename"_processors"$numproc"_threads"$numthreads
+            name=$casename"_processors"$numproc"_threads"$numthreads
+            fname=$name".sh"
+
+            if [[ ! $issaga == "True" ]]; then
+                mpirun -np $numproc $flowdir/flow $data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numproc"_threads"$numthreads
+            else
+                if [[ ! -d $name ]]; then
+                    mkdir -p $name
+                fi
+
+                (
+                    cd $name
+                    echo "#!/bin/bash" > $fname
+                    echo "#SBATCH --account=NN9766K" >> $fname
+                    echo "#SBATCH --job-name="$name >> $fname
+                    echo "#SBATCH --time=0-01:00:00" >> $fname
+                    echo "#SBATCH --mem-per-cpu=3G" >> $fname
+                    echo "#SBATCH --ntasks="$numproc" --cpus-per-task="$numthreads >> $fname
+
+                    echo "set -o errexit # Make bash exit on any error" >> $fname
+                    echo "set -o nounset # Treat unset variables as errors" >> $fname
+                    echo "module --quiet purge" >> $fname
+                    echo "module load Boost/1.71.0-GCC-8.3.0" >> $fname
+                    echo "module load OpenMPI/3.1.4-GCC-8.3.0" >> $fname
+                    echo "module load OpenBLAS/0.3.7-GCC-8.3.0" >> $fname
+                    echo "module list" >> $fname
+
+                    ###echo "workdir=\$USERWORK/$name" >> $fname
+                    ###echo "mkdir -p \$workdir" >> $fname
+                    ###echo "cp -r "$casefullfoldername" \$workdir" >> $fname
+                    ###echo "cd \$workdir" >> $fname
+
+                    echo "cp -r "$casefullfoldername" \$SCRATCH" >> $fname
+                    echo "cd \$SCRATCH" >> $fname
+
+                    echo "savefile output/*DBG " >> $fname
+
+                    echo "time mpirun "$flowdir"flow $casefoldername/$casename.DATA --threads-per-process=$numthreads --output-dir=output" >> $fname
+                    echo "exit 0" >> $fname
+
+                    sbatch $fname
+                )
+            fi 
+            
         done
     done
 done
