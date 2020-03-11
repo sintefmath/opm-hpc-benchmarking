@@ -149,5 +149,5 @@ if __name__ == "__main__":
         os.makedirs(foldername)
 
     for numthreads in np.arange(1,args.maxthreads+1):
-        #writedata(foldername, "NORNE_ATW2013",numthreads, args.maxproc)
+        writedata(foldername, "NORNE_ATW2013",numthreads, args.maxproc)
         writedata(foldername, "SPE9",numthreads, args.maxproc)
