@@ -9,6 +9,25 @@ if [[ "`uname --nodename|cut -d "." -f2,3`" == "saga.sigma2" ]]; then
     issaga=True
 fi
 
+if [  -z  ${SIGMA2_SINTEF_REPO} ];
+then
+    SIGMA2_SINTEF_REPO=$HOME/sigma2/
+fi
+MODULES_TO_LOAD=${SIGMA2_SINTEF_REPO}/opm/modules_to_load.sh
+if [ ! -f ${MODULES_TO_LOAD} ]
+then
+    >&2 echo '${SIGMA2_SINTEF_REPO}/opm/modules_to_load.sh does not exist'
+    >&2 echo "SIGMA2_SINTEF_REPO=${SIGMA2_TO_SINTEF_REPO}"
+    >&2 echo "Please make sure the sigma2-repository  is checked out,"
+    >&2 echo "then update SIGMA2_SINTEF_REPO to point to this repository."
+    >&2 echo ""
+    >&2 echo "eg."
+    >&2 echo "    cd $HOME"
+    >&2 echo "    git clone https://github.com/sintefmath/sigma2"
+    >&2 echo "    export SIGMA2_SINTEF_REPO=$HOME/sigma2"
+    exit 1
+fi
+
 maxproc=""
 flowdir=""
 cases=""
@@ -146,7 +165,7 @@ do
             fname=$name".sh"
 
             if [[ ! $issaga == "True" ]]; then
-                mpirun -np $numproc $flowdir/flow $data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numproc"_threads"$numthreads
+                srun -np $numproc $flowdir/flow $data --threads-per-process=$numthreads --output-dir=$casename"_processors"$numproc"_threads"$numthreads
             else
                 if [[ ! -d $name ]]; then
                     mkdir -p $name
@@ -164,9 +183,8 @@ do
                     echo "set -o errexit # Make bash exit on any error" >> $fname
                     echo "set -o nounset # Treat unset variables as errors" >> $fname
                     echo "module --quiet purge" >> $fname
-                    echo "module load Boost/1.71.0-GCC-8.3.0" >> $fname
-                    echo "module load OpenMPI/3.1.4-GCC-8.3.0" >> $fname
-                    echo "module load OpenBLAS/0.3.7-GCC-8.3.0" >> $fname
+
+		    cat $MODULES_TO_LOAD >> $fname
                     echo "module list" >> $fname
 
                     ###echo "workdir=\$USERWORK/$name" >> $fname
@@ -179,7 +197,7 @@ do
 
                     echo "savefile output/*DBG " >> $fname
 
-                    echo "time mpirun "$flowdir"flow $casefoldername/$casename.DATA --threads-per-process=$numthreads --output-dir=output" >> $fname
+                    echo "time srun "$flowdir"flow $casefoldername/$casename.DATA --threads-per-process=$numthreads --output-dir=output" >> $fname
                     echo "exit 0" >> $fname
 
                     sbatch $fname
